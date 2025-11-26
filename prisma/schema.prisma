@@ -1,0 +1,86 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  quotas    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  consents  Consent[]
+  auditLogs AuditLog[]
+  scanJobs  ScanJob[]
+  crawlTasks CrawlTask[]
+  teamId    Int?
+  team      Team?    @relation(fields: [teamId], references: [id])
+}
+model ScanJob {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  teamId    Int?
+  type      String
+  plugin    String?
+  status    String
+  config    Json
+  result    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      Log[]
+  user      User     @relation(fields: [userId], references: [id])
+  team      Team?    @relation(fields: [teamId], references: [id])
+}
+model CrawlTask {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  scanJobId Int?
+  teamId    Int?
+  config    Json
+  result    Json
+  startedAt DateTime
+  finishedAt DateTime?
+  logs      Log[]
+  user      User     @relation(fields: [userId], references: [id])
+  scanJob   ScanJob? @relation(fields: [scanJobId], references: [id])
+  team      Team?    @relation(fields: [teamId], references: [id])
+}
+model Consent {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  statement  String
+  acceptedAt DateTime
+  ip         String?
+  notes      String?
+  user       User?    @relation(fields: [userId], references: [id])
+}
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  eventType String
+  userId    Int?
+  teamId    Int?
+  details   String
+  refId     Int?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  team      Team?    @relation(fields: [teamId], references: [id])
+}
+model Team {
+  id     Int     @id @default(autoincrement())
+  name   String
+  users  User[]
+  jobs   ScanJob[]
+  audits AuditLog[]
+  crawls CrawlTask[]
+}
+model Log {
+  id        Int      @id @default(autoincrement())
+  type      String
+  jobId     Int?
+  content   String
+  timestamp DateTime @default(now())
+}
