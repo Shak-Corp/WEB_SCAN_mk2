@@ -7,5 +7,5 @@ RUN yarn build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 COPY --from=build /app ./
-EXPOSE 3000
-CMD ["yarn", "start"]
+EXPOSE 3001
+CMD ["node", "src/server.js"]
